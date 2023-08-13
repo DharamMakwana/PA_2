@@ -1,8 +1,24 @@
 const express = require("express");
-const app = express();
+const mongoose = require("mongoose");
 const multer = require("multer");
 const path = require("path");
+const app = express();
 const PORT = 8000;
+const { MongoClient } = require("mongodb");
+
+const User = require("./models/User"); // Import the User model
+
+// MongoDB connection setup
+mongoose.connect("mongodb://localhost:27017/NewDB", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
+db.once("open", () => {
+  console.log("Connected to MongoDB");
+});
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -21,8 +37,27 @@ app.get("/upload", (req, res) => {
   res.render("upload");
 });
 
-app.post("/upload", upload.single("image"), (req, res) => {
-  res.send("image uploaded");
+app.post("/upload", upload.single("image"), async (req, res) => {
+  const { fname, lname, password, cpassword } = req.body;
+  const profileImage = req.file ? req.file.filename : null;
+
+  // Create a new user instance
+  const newUser = new User({
+    firstName: fname,
+    lastName: lname,
+    password: password,
+    confirmPassword: cpassword,
+    profileImage: profileImage,
+  });
+
+  try {
+    // Save the user instance to the database
+    await newUser.save();
+    res.send("User data and image uploaded");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error uploading user data");
+  }
 });
 
 app.listen(PORT, (err) => {

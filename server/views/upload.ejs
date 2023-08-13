@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      label {
+        font-size: larger;
+      }
+      input {
+        width: 360px;
+      }
+      tr,
+      td {
+        padding-top: 25px;
+      }
+      #files {
+        border: 25px;
+      }
+    </style>
+  </head>
+  <body
+    style="
+      align-items: center;
+      justify-content: center;
+      display: flex;
+      margin-top: 150px;
+      background-color: azure;
+    "
+  >
+    <form action="/upload" , method="POST" enctype="multipart/form-data">
+      <table
+        style="
+          border: 5px solid black;
+          border-radius: 5px;
+          padding: 10px;
+          box-shadow: blueviolet;
+        "
+      >
+        <tr>
+          <td><label for="fname" name="fname">First Name: </label></td>
+          <td><input type="text" name="fname" /></td>
+        </tr>
+        <tr>
+          <td><label for="lname" name="lname">Last Name: </label></td>
+          <td><input type="text" name="lname" /></td>
+        </tr>
+        <tr>
+          <td>
+            <label for="passowrd" name="password">Password: </label>
+          </td>
+          <td>
+            <input type="text" name="password" />
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="cpassword" name="cpassword">Confirm Password: </label>
+          </td>
+          <td>
+            <input type="text" name="cpassword" />
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="pfiles" name="pfile">Profile pic: </label>
+          </td>
+          <td>
+            <input type="file" name="image" />
+          </td>
+        </tr>
+      </table>
+
+      <br />
+      <input class="files" type="submit" />
+    </form>
+  </body>
+</html>

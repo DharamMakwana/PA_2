@@ -1,15 +1,19 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const multer = require("multer");
+const dotenv = require("dotenv"); // Import the dotenv package
 const path = require("path");
 const app = express();
 const PORT = 8000;
 const { MongoClient } = require("mongodb");
 
+dotenv.config(); // Load environment variables from .env file
+
+
 const User = require("./models/User"); // Import the User model
 
 // MongoDB connection setup
-mongoose.connect("mongodb://localhost:27017/NewDB", {
+mongoose.connect(process.env.MONGODBURL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });

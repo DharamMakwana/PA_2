@@ -1,71 +1,90 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const multer = require("multer");
-const dotenv = require("dotenv"); // Import the dotenv package
+require("dotenv").config(); // Import the dotenv package and Load environment variables from .env file
+
 const path = require("path");
+const fs = require("fs").promises;
+
+const express = require("express");
 const app = express();
 const PORT = 8000;
-const { MongoClient } = require("mongodb");
 
-dotenv.config(); // Load environment variables from .env file
-
-
+const mongoose = require("mongoose");
 const User = require("./models/User"); // Import the User model
 
-// MongoDB connection setup
-mongoose.connect(process.env.MONGODBURL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "MongoDB connection error:"));
-db.once("open", () => {
-  console.log("Connected to MongoDB");
-});
-
+const multer = require("multer");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads");
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    const fileName = Date.now() + path.extname(file.originalname);
+    cb(null, fileName);
+    req.filenameToBeUpated = fileName;
   },
 });
-
 const upload = multer({ storage: storage });
+
+const startServer = async (app) => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    app.listen(PORT, () => console.log("Server running on " + PORT));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+app.use("/uploads", express.static("uploads"));
 
 app.set("view engine", "ejs");
 
-app.get("/upload", (req, res) => {
+app.get("/", (req, res) => {
+  res.render("upload");
+});
+
+app.get("/image/:id", (req, res) => {
+  const imageId = req.params.id;
+  res.render("image", { imageId });
+});
+
+app.get("/", (req, res) => {
   res.render("upload");
 });
 
 app.post("/upload", upload.single("image"), async (req, res) => {
   const { fname, lname, password, cpassword } = req.body;
-  const profileImage = req.file ? req.file.filename : null;
 
-  // Create a new user instance
-  const newUser = new User({
+  if (password !== cpassword)
+    res.send("password do not match. please try again");
+
+  const userObj = {
     firstName: fname,
     lastName: lname,
     password: password,
-    confirmPassword: cpassword,
-    profileImage: profileImage,
-  });
+  };
 
   try {
-    // Save the user instance to the database
-    await newUser.save();
-    res.send("User data and image uploaded");
+    // Create a new user instance and Save the user instance to the database
+    const newUser = await User.create(userObj);
+    await updateFileName(
+      req.filenameToBeUpated,
+      `${newUser._id.toString()}.${req.filenameToBeUpated.split(".")[1]}`
+    );
+    res.redirect(`image/${newUser._id.toString()}`);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error uploading user data");
   }
 });
 
-app.listen(PORT, (err) => {
-  if (err) console.log(err);
+startServer(app); // Start Server
 
-  console.log(`Server is listening on port ${PORT}`);
-});
+const updateFileName = async (oldName, newName) => {
+  try {
+    await fs.rename(
+      path.join("uploads/", oldName),
+      path.join("uploads/", newName)
+    );
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
